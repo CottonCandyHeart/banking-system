@@ -19,9 +19,6 @@ public class AuthorizationController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthorizationDTO dto) {
-
-        // TODO walidacja ??
-
         return ResponseEntity.ok(authorizationService.authenticate(dto));
     }
 }

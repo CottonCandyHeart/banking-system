@@ -25,7 +25,7 @@ public class AuthorizationService {
             throw new UnauthorizedException("Invalid username or password");
         }
 
-        // Token sesji)
+        // Token sesji
         return "mock-token";
     }
 }

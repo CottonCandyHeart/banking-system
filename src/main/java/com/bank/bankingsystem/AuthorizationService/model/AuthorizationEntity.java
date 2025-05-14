@@ -18,4 +18,5 @@ public class AuthorizationEntity {
 
     private String username;
     private String passwordHash;
+    private boolean active;
 }
