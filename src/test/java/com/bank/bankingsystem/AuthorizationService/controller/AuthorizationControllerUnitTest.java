@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthorizationController.class)
-//@Import(AuthorizationControllerUnitTest.MockedAuthorizationServiceConfig.class)
 public class AuthorizationControllerUnitTest {
     @Autowired
     private MockMvc mockMvc;
