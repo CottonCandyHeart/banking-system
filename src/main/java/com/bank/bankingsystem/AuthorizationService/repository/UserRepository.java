@@ -1,4 +1,10 @@
 package com.bank.bankingsystem.AuthorizationService.repository;
 
-public interface UserRepository {
+import com.bank.bankingsystem.AuthorizationService.model.UserEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    Optional<UserEntity> findByUsername(String username);
 }
