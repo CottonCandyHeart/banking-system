@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SecurityConfigUnitTest {
     @Test
-    void passwordEncoder_shouldReturnBCryptPasswordEncoderInstance() {
+    void shouldReturnBCryptPasswordEncoderInstance() {
         SecurityConfig config = new SecurityConfig();
 
         BCryptPasswordEncoder encoder = config.passwordEncoder();
