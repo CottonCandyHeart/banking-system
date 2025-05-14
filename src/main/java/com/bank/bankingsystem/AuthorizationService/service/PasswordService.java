@@ -2,6 +2,7 @@ package com.bank.bankingsystem.AuthorizationService.service;
 
 import com.bank.bankingsystem.AuthorizationService.dto.ChangePasswordRequest;
 import com.bank.bankingsystem.AuthorizationService.model.UserEntity;
+import com.bank.bankingsystem.AuthorizationService.util.PasswordValidator;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,10 @@ public class PasswordService {
 
         String username = getCurrentUsername();
         UserEntity user = userService.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!PasswordValidator.isStrong(request.getNewPassword())) {
+            throw new IllegalArgumentException("Password is too weak.");
+        }
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect.");

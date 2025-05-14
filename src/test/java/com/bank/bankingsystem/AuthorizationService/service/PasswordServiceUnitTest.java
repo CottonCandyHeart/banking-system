@@ -2,6 +2,7 @@ package com.bank.bankingsystem.AuthorizationService.service;
 
 import com.bank.bankingsystem.AuthorizationService.dto.ChangePasswordRequest;
 import com.bank.bankingsystem.AuthorizationService.model.UserEntity;
+import com.bank.bankingsystem.AuthorizationService.util.PasswordValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -56,8 +57,8 @@ public class PasswordServiceUnitTest {
     @Test
     void shouldChangePasswordWhenRequestIsValid() {
         String username = "testuser";
-        String oldPassword = "oldpassword";
-        String newPassword = "newpassword";
+        String oldPassword = "oldPassword123!";
+        String newPassword = "newPassword123!";
 
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setCurrentPassword(oldPassword);
@@ -66,25 +67,25 @@ public class PasswordServiceUnitTest {
 
         UserEntity user = new UserEntity();
         user.setUsername(username);
-        user.setPassword("hashedoldpassword");
+        user.setPassword("hashedOldPassword123");
 
         mockSecurityContext(username);
         when(userService.findByUsername(username)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(oldPassword, user.getPassword())).thenReturn(true);
-        when(passwordEncoder.encode(newPassword)).thenReturn("hashednewpassword");
+        when(passwordEncoder.encode(newPassword)).thenReturn("hashedOldPassword123");
 
         passwordService.changePassword(request);
 
-        assertEquals("hashednewpassword", user.getPassword());
+        assertEquals("hashedOldPassword123", user.getPassword());
         verify(userService).save(user);
     }
 
     @Test
     void shouldThrowExceptionWhenPasswordsDoNotMatch() {
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setCurrentPassword("oldpassword");
-        request.setNewPassword("newpassword");
-        request.setConfirmNewPassword("different");
+        request.setCurrentPassword("oldPassword123!");
+        request.setNewPassword("newPassword123!");
+        request.setConfirmNewPassword("Different123!");
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 passwordService.changePassword(request)
@@ -99,9 +100,9 @@ public class PasswordServiceUnitTest {
         String username = "missinguser";
 
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setCurrentPassword("oldpassword");
-        request.setNewPassword("newpassword");
-        request.setConfirmNewPassword("newpassword");
+        request.setCurrentPassword("oldPassword123!");
+        request.setNewPassword("newPassword123!");
+        request.setConfirmNewPassword("newPassword123!");
 
         mockSecurityContext(username);
         when(userService.findByUsername(username)).thenReturn(Optional.empty());
@@ -118,17 +119,17 @@ public class PasswordServiceUnitTest {
         String username = "testuser";
 
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setCurrentPassword("wrongoldpassword");
-        request.setNewPassword("newpassword");
-        request.setConfirmNewPassword("newpassword");
+        request.setCurrentPassword("wrongOldPassword123!");
+        request.setNewPassword("newPassword123!");
+        request.setConfirmNewPassword("newPassword123!");
 
         UserEntity user = new UserEntity();
         user.setUsername(username);
-        user.setPassword("hashedpassword");
+        user.setPassword("hashedPassword123!");
 
         mockSecurityContext(username);
         when(userService.findByUsername(username)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrongoldpassword", "hashedpassword")).thenReturn(false);
+        when(passwordEncoder.matches("wrongOldPassword123!", "hashedPassword123!")).thenReturn(false);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 passwordService.changePassword(request)
@@ -143,24 +144,57 @@ public class PasswordServiceUnitTest {
         String username = "test";
 
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setCurrentPassword("oldpassword");
-        request.setNewPassword("newpassword");
-        request.setConfirmNewPassword("newpassword");
+        request.setCurrentPassword("oldPassword123!");
+        request.setNewPassword("newPassword123!");
+        request.setConfirmNewPassword("newPassword123!");
 
         UserEntity user = new UserEntity();
         user.setUsername(username);
-        user.setPassword("hashedoldpassword");
+        user.setPassword("hashedOldPassword123!");
 
         when(authentication.getPrincipal()).thenReturn(username);
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
         when(userService.findByUsername(username)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldpassword", "hashedoldpassword")).thenReturn(true);
-        when(passwordEncoder.encode("newpassword")).thenReturn("hashednewpassword");
+        when(passwordEncoder.matches("oldPassword123!", "hashedOldPassword123!")).thenReturn(true);
+        when(passwordEncoder.encode("newPassword123!")).thenReturn("hashedNewPassword123!");
 
         passwordService.changePassword(request);
 
-        assertEquals("hashednewpassword", user.getPassword());
+        assertEquals("hashedNewPassword123!", user.getPassword());
         verify(userService).save(user);
     }
+
+    @Test
+    void shouldThrowExceptionWhenPasswordIsWeak() {
+        String username = "testuser";
+        String oldPassword = "oldPassword123!";
+        String weakPassword = "newpassword123";
+
+        ChangePasswordRequest request = new ChangePasswordRequest();
+        request.setCurrentPassword(oldPassword);
+        request.setNewPassword(weakPassword);
+        request.setConfirmNewPassword(weakPassword);
+
+        UserEntity user = new UserEntity();
+        user.setUsername(username);
+        user.setPassword("hashedOldPassword123!");
+
+        mockSecurityContext(username);
+        when(userService.findByUsername(username)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(oldPassword, user.getPassword())).thenReturn(true);
+
+        try (MockedStatic<PasswordValidator> validatorMock = mockStatic(PasswordValidator.class)) {
+            validatorMock.when(() -> PasswordValidator.isStrong(weakPassword)).thenReturn(false);
+
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                    passwordService.changePassword(request)
+            );
+
+            assertEquals("Password is too weak.", ex.getMessage());
+            verify(userService, never()).save(any());
+        }
+    }
+
+
 }
