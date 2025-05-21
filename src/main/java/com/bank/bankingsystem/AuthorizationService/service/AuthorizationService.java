@@ -1,5 +1,7 @@
 package com.bank.bankingsystem.AuthorizationService.service;
 
+import com.bank.bankingsystem.AuditLogService.model.LoginLogEntity;
+import com.bank.bankingsystem.AuditLogService.repository.LoginLogRepository;
 import com.bank.bankingsystem.AuthorizationService.dto.AuthorizationDTO;
 import com.bank.bankingsystem.AuthorizationService.exception.UnauthorizedException;
 import com.bank.bankingsystem.AuthorizationService.model.AuthorizationEntity;
@@ -13,18 +15,23 @@ import java.time.LocalDateTime;
 public class AuthorizationService {
     private final AuthorizationRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final LoginLogRepository loginLogRepository;
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final long LOCK_TIME_DURATION = 15; // in minutes
 
-    public AuthorizationService(AuthorizationRepository repository, PasswordEncoder passwordEncoder){
+    public AuthorizationService(AuthorizationRepository repository, PasswordEncoder passwordEncoder,LoginLogRepository loginLogRepository){
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.loginLogRepository = loginLogRepository;
     }
 
     public String authenticate(AuthorizationDTO dto) {
         AuthorizationEntity user = repository.findByUsername(dto.getUsername())
-                .orElseThrow(() -> new UnauthorizedException("Invalid username or password"));
+                .orElseThrow(() -> {
+                    saveLoginAttempt(null, false);
+                    return new UnauthorizedException("Invalid username or password");
+                });
 
         if (isAccountLocked(user)) {
             throw new UnauthorizedException("Account is temporarily locked. Try again later.");
@@ -39,9 +46,12 @@ public class AuthorizationService {
             }
 
             repository.save(user);
+            saveLoginAttempt(user.getId(), false);
 
             throw new UnauthorizedException("Invalid username or password");
         }
+
+        saveLoginAttempt(user.getId(), true);
 
         // Token sesji
         return "mock-token";
@@ -59,5 +69,13 @@ public class AuthorizationService {
             repository.save(user);
             return false;
         }
+    }
+
+    private void saveLoginAttempt(Long userId, boolean success) {
+        LoginLogEntity log = new LoginLogEntity();
+        log.setUserId(userId);
+        log.setLoginTime(LocalDateTime.now());
+        log.setSuccess(success);
+        loginLogRepository.save(log);
     }
 }
