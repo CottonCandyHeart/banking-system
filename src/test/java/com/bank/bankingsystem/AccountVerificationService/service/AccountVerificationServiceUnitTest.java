@@ -21,7 +21,7 @@ public class AccountVerificationServiceUnitTest {
     }
 
     @Test
-    void shouldReturnInvalid_whenAccountNumberIsNull() {
+    void shouldReturnInvalidWhenAccountNumberIsNull() {
         AccountVerificationRequest request = new AccountVerificationRequest(null);
 
         AccountVerificationResponse response = accountVerificationService.verifyAccount(request);
@@ -31,7 +31,7 @@ public class AccountVerificationServiceUnitTest {
     }
 
     @Test
-    void shouldReturnInvalid_whenAccountNumberIsIncorrectFormat() {
+    void shouldReturnInvalidWhenAccountNumberIsIncorrectFormat() {
         AccountVerificationRequest request = new AccountVerificationRequest("123456");
 
         AccountVerificationResponse response = accountVerificationService.verifyAccount(request);
@@ -41,7 +41,7 @@ public class AccountVerificationServiceUnitTest {
     }
 
     @Test
-    void shouldReturnInvalid_whenAccountNumberDoesNotExist() {
+    void shouldReturnInvalidWhenAccountNumberDoesNotExist() {
         String testAccount = "12345678901234567890123456";
         when(customerRepository.existsByAccountNumber(testAccount)).thenReturn(false);
 
@@ -53,7 +53,7 @@ public class AccountVerificationServiceUnitTest {
     }
 
     @Test
-    void shouldReturnValid_whenAccountNumberExistsAndFormatIsCorrect() {
+    void shouldReturnValidWhenAccountNumberExistsAndFormatIsCorrect() {
         String testAccount = "12345678901234567890123456";
         when(customerRepository.existsByAccountNumber(testAccount)).thenReturn(true);
 
