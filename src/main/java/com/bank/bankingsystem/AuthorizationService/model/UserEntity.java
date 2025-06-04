@@ -19,5 +19,4 @@ public class UserEntity {
     private String username;
     private String password;
 
-    // możemy coś tu dodać jeszcze
 }

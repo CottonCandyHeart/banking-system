@@ -22,4 +22,5 @@ public class UserService {
     public void save(UserEntity user) {
         userRepository.save(user);
     }
+
 }
