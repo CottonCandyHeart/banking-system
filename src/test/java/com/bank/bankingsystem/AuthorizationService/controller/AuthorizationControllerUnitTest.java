@@ -1,31 +1,38 @@
 package com.bank.bankingsystem.AuthorizationService.controller;
 
 import com.bank.bankingsystem.AuthorizationService.dto.AuthorizationDTO;
+import com.bank.bankingsystem.AuthorizationService.exception.GlobalExceptionHandler;
 import com.bank.bankingsystem.AuthorizationService.exception.UnauthorizedException;
 import com.bank.bankingsystem.AuthorizationService.service.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AuthorizationController.class)
 public class AuthorizationControllerUnitTest {
-    @Autowired
+
     private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @MockBean
     private AuthorizationService authorizationService;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        authorizationService = mock(AuthorizationService.class);
+        AuthorizationController controller = new AuthorizationController(authorizationService);
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+        objectMapper = new ObjectMapper();
+    }
 
     @Test
     void shouldLReturnMockTokenWhenLogInSuccessful() throws Exception{
